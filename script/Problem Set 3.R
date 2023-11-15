@@ -30,6 +30,10 @@ library(rvest)
 library(readr)
 library(glmnet)
 library(caret)
+install.packages(c("psych", "summarytools"))
+library(psych)
+library(summarytools)
+
 
 # Cargar las librerías listadas e instalarlas en caso de ser necesario
 p_load(rio, # Import data easily
@@ -146,58 +150,158 @@ train_hogares <- train_hogares %>% rename(Per_Uni_Gasto=Npersug)
 train_hogares <- train_hogares %>% rename(Linea_Indigencia=Li)
 train_hogares <- train_hogares %>% rename(Linea_Pobreza=Lp)
 
+# Analisis descriptivo 
+
+train_personas %>%
+  summarise_all(~sum(is.na(.))) %>% transpose()
+
+train_personas <- train_personas %>%
+  mutate(
+    edadjefe = ifelse(Parent_jh == 1, Edad, NA_real_),
+    edadconyugue = ifelse(Parent_jh == 2, Edad, NA_real_),
+    edadhijos = ifelse(Parent_jh == 3, Edad, NA_real_),
+    edadnietos = ifelse(Parent_jh == 4, Edad, NA_real_),
+    sexojefe = ifelse(Parent_jh == 1, Sexo, NA_character_),
+    sexoconyugue = ifelse(Parent_jh == 2, Sexo, NA_character_),
+    Educjefe = ifelse(Parent_jh == 1, Educ, NA_character_),
+    Educjefe1 = ifelse(Parent_jh == 1, G_Educ, NA_real_),
+    Educconyugue = ifelse(Parent_jh == 2, G_Educ, NA_real_),
+    Educhijos = ifelse(Parent_jh == 3, G_Educ, NA_real_),
+    SS_Jefe = ifelse(Parent_jh == 1, SS, NA_character_),
+    SS_Conyugue = ifelse(Parent_jh == 2, SS, NA_character_),
+    categocupjefe = ifelse(Parent_jh == 1, Act_Ocup, NA_character_),
+    categocupconyugue = ifelse(Parent_jh == 2, Act_Ocup, NA_character_),
+    categocuphijos = ifelse(Parent_jh == 3, Act_Ocup, NA_character_),
+    empleadodomestico = ifelse(Parent_jh == 6, Parent_jh, NA_character_),
+    tiempotrabajojefe = ifelse(Parent_jh == 1, Exp_Emp, NA_real_),
+    tiempotrabajoconyugue = ifelse(Parent_jh == 2, Exp_Emp, NA_real_),
+    posicionocupacionjefe = ifelse(Parent_jh == 1, Cat_Ocup, NA_character_),
+    posicionocupacionconyugue = ifelse(Parent_jh == 2, Cat_Ocup, NA_character_),
+    horastrabajadasjefe = ifelse(Parent_jh == 1, Hrs_Trab, NA_real_),
+    horastrabajadasconyugue = ifelse(Parent_jh == 2, Hrs_Trab, NA_real_),
+    especiejefe = ifelse(Parent_jh == 1, Otros_Ing, NA_character_),
+    especieconyugue = ifelse(Parent_jh == 2, Otros_Ing, NA_character_),
+    estratojefe= ifelse(Parent_jh == 2, Estrato1, NA_real_),
+    otronegociojefe= ifelse(Parent_jh == 1, Act_Sec, NA_real_),
+    otronegocioconyugue= ifelse(Parent_jh == 2 ,Act_Sec , NA_real_),
+    otrashorasjefe= ifelse(Parent_jh == 1 ,Hrs_Act_Sec , NA_real_),
+    otrashorasconyugue= ifelse(Parent_jh == 2 ,Hrs_Act_Sec , NA_real_),
+    Jefe_Hogar_Mujer = ifelse(Parent_jh == 1 & Sexo == 2, 1, 0))
+
+
+train_personas <- train_personas %>%
+  group_by(id) %>%
+  mutate(
+    edadhijos = ifelse(Parent_jh == 3, Edad, NA_real_),
+    total_ocupados = sum(Ocupac == 1, na.rm = TRUE),
+    total_desocupados = sum(Des == 1, na.rm = TRUE),
+    total_inactivos = sum(Ina == 1, na.rm = TRUE),
+    htrabaocupados = sum(Hrs_Trab, na.rm = TRUE),
+    niños6 = sum(edadhijos < 6, na.rm = TRUE),
+    niños6a12 = sum(edadhijos >= 6 & edadhijos < 12, na.rm = TRUE),
+    niños12a18 = sum(edadhijos >= 12 & edadhijos < 18, na.rm = TRUE),
+    niños18 = sum(edadhijos < 18, na.rm = TRUE),
+    edad_promediohijos = mean(edadhijos ,na.rm = TRUE) ,
+    anos_educ_promedio_hijos = mean(Educhijos, na.rm = TRUE),
+    Ingreso_Total_Por_Hogar = sum(Ing_Total, na.rm = TRUE),
+    Subsidio = ifelse(Sub_Alim == 1 | Sub_Transp == 1 | Sub_Educ == 1 | Sub_Fam == 1, 1, 0),
+    Subsidio_Familia = ifelse(any(Subsidio == 1), 1, 0),
+    htrabaocupados_prop = htrabaocupados / total_ocupados)
 
 
 
+variables_Jefe <- train_personas %>% 
+  filter(Parent_jh == 1) %>%  # Filtra solo el jefe de hogar
+  select(id, edadjefe, sexojefe, Educjefe, Educjefe1, SS_Jefe,categocupjefe,tiempotrabajojefe,
+         posicionocupacionjefe,horastrabajadasjefe,especiejefe ,Estrato1,otronegociojefe,
+          otrashorasjefe,total_ocupados,total_desocupados,total_inactivos,htrabaocupados,niños6,niños6a12,niños12a18,niños18,
+         Ingreso_Total_Por_Hogar, htrabaocupados_prop,Jefe_Hogar_Mujer, anos_educ_promedio_hijos,edad_promediohijos,Subsidio , Subsidio_Familia )
+train_hogares <- left_join(train_hogares, variables_Jefe, by = "id")
+
+variables_conyugue <- train_personas %>% 
+  filter(Parent_jh == 2) %>%  # Filtra solo el jefe de hogar
+  select(id,edadconyugue,sexoconyugue,Educconyugue,SS_Conyugue,categocupconyugue,tiempotrabajoconyugue
+         ,posicionocupacionconyugue,horastrabajadasconyugue,especieconyugue,
+         otronegocioconyugue,otrashorasconyugue )
+
+variables_conyugue<- distinct(variables_conyugue, id, .keep_all = TRUE)
+
+train_hogares <- left_join(train_hogares, variables_conyugue, by = "id")
+
+#### Corregir las Variables para la base de datos train_hogares
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male",
+                                   sexojefe==2 ~"Female"),
+                                   Educjefe= case_when(Educjefe==1 ~"Ninguno",
+                                                       Educjefe==2 ~"Preescolar",
+                                                       Educjefe==3 ~"Educación básica en el ciclo de primaria",
+                                                       Educjefe==4 ~"Educación básica en el ciclo de secundaria",
+                                                       Educjefe==5 ~"Educación media",
+                                                       Educjefe==6 ~"Superior o universitaria",
+                                                       Educjefe==9 ~"No sabe"),
+                                  SS_Jefe= case_when(SS_Jefe==1 ~"Cotiza a un Seguro",
+                                                     SS_Jefe==2 ~"No Cotiza",
+                                                     SS_Jefe==9 ~"Otro"),
+                                  categocupjefe= case_when(categocupjefe==1 ~"Trabajando",
+                                                           categocupjefe==2 ~"Buscando trabajo",
+                                                           categocupjefe==3 ~"Estudiando",
+                                                           categocupjefe==4 ~"Oficios del hogar",
+                                                           categocupjefe==5 ~"Incapacitado permanente para trabajar f",
+                                                           categocupjefe==6 ~"Otra"),
+                                  posicionocupacionjefe= case_when(posicionocupacionjefe==1 ~"Obrero",
+                                                                   posicionocupacionjefe==2 ~"empleado del gobierno",
+                                                                   posicionocupacionjefe==3 ~"Empleado doméstico",
+                                                                   posicionocupacionjefe==4 ~"Trabajador por cuenta propia",
+                                                                   posicionocupacionjefe==5 ~"Patrón o empleador",
+                                                                   posicionocupacionjefe==6 ~"Trabajador familiar sin remuneración",
+                                                                   posicionocupacionjefe==7 ~"Trabajador sinremuneración en empresas o negocios de otros hogares",
+                                                                   posicionocupacionjefe==8 ~ "Jornalero o peón",
+                                                                   posicionocupacionjefe==9 ~ "Otro"),
+                                especiejefe= case_when( especiejefe==1 ~"si",                     
+                                                        especiejefe==2~"no",
+                                                        especiejefe==3~"No Sabe"),
+                                Subsidio_Familia= case_when( Subsidio_Familia==1 ~"si",                     
+                                                             Subsidio_Familia==0~"no"),
+                                sexoconyugue = case_when (sexoconyugue==1 ~"Male",
+                                                          sexoconyugue==2 ~"Female"),
+                                SS_Conyugue= case_when(SS_Conyugue==1 ~"Cotiza a un Seguro",
+                                                       SS_Conyugue==2 ~"No Cotiza",
+                                                       SS_Conyugue==9 ~"Otro"),
+                                categocupconyugue= case_when( categocupconyugue==1 ~"Trabajando",
+                                                              categocupconyugue==2 ~"Buscando trabajo",
+                                                              categocupconyugue==3 ~"Estudiando",
+                                                              categocupconyugue==4 ~"Oficios del hogar",
+                                                              categocupconyugue==5 ~"Incapacitado permanente para trabajar f",
+                                                              categocupconyugue==6 ~"Otra"),   
+                                otronegociojefe= case_when( otronegociojefe==1 ~"si",
+                                                            otronegociojefe==2 ~"no"),
+                                otronegocioconyugue= case_when( otronegocioconyugue==1 ~"si",
+                                                                otronegocioconyugue==2 ~"no"),
+                               especieconyugue= case_when( especieconyugue==1 ~"si",                     
+                                                           especieconyugue==2~"no",
+                                                          especieconyugue==3~"No Sabe"),
+                               Pobre= case_when(Pobre==1 ~"si",                     
+                                                Pobre==0~"no"),
+                          Indigente= case_when(Indigente==1 ~"si",                     
+                                                    Indigente==0~"no"))
+                    
+# Definimos las variables categóricas
+variables_categoricas <- c("sexojefe",
+                           "Educjefe",
+                           "SS_Jefe",
+                           "categocupjefe",
+                           "posicionocupacionjefe",
+                           "especiejefe",
+                           "Subsidio_Familia",
+                           "sexoconyugue",
+                           "SS_Conyugue",
+                           "categocupconyugue",
+                           "otronegociojefe",
+                           "otronegocioconyugue",
+                           "especieconyugue",
+                           "Pobre",
+                           "Indigente")
+                
+train_hogares <- train_hogares %>% mutate_at(variables_categoricas, as.factor)
 
