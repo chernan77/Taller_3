@@ -17,6 +17,8 @@ install.packages("tidyverse")
 install.packages("rvest")
 install.packages("glmnet")
 install.packages("caret")
+install.packages(c("psych", "summarytools"))
+remotes::install_github("r-lib/remotes")
 library(ggplot2)
 library(openxlsx)
 library(pacman)
@@ -30,7 +32,6 @@ library(rvest)
 library(readr)
 library(glmnet)
 library(caret)
-install.packages(c("psych", "summarytools"))
 library(psych)
 library(summarytools)
 
@@ -51,7 +52,6 @@ train_hogares <- read.xlsx("https://github.com/chernan77/Data_3/raw/main/train_h
 test_personas1 <- read.xlsx("https://github.com/chernan77/Data_3/raw/main/test_personas_1.xlsx")
 test_personas2 <- read.xlsx("https://github.com/chernan77/Data_3/raw/main/test_personas_2.xlsx")
 test_hogares <- read.xlsx("https://github.com/chernan77/Data_3/raw/main/test_hogares.xlsx")
-
 
 
 # -----------------------UNIÓN DE DATOS------------------------------------# 
@@ -138,6 +138,7 @@ train_personas <- train_personas %>% rename(Ocupac=Oc)
 train_personas <- train_personas %>% rename(Ing_Total_Obs=Ingtotob)
 train_personas <- train_personas %>% rename(Ing_Total=Ingtot)
 
+
 # Renombrar las variables de train_hogares
 
 train_hogares <- train_hogares %>% rename(Habit_por_Hogar=P5000)
@@ -149,6 +150,9 @@ train_hogares <- train_hogares %>% rename(Per_por_Hogar=Nper)
 train_hogares <- train_hogares %>% rename(Per_Uni_Gasto=Npersug)
 train_hogares <- train_hogares %>% rename(Linea_Indigencia=Li)
 train_hogares <- train_hogares %>% rename(Linea_Pobreza=Lp)
+train_hogares <- train_hogares %>% rename(Ing_perc_ug=Ingpcug)
+
+
 
 # Analisis descriptivo 
 
@@ -165,27 +169,26 @@ train_personas <- train_personas %>%
     sexoconyugue = ifelse(Parent_jh == 2, Sexo, NA_character_),
     Educjefe = ifelse(Parent_jh == 1, Educ, NA_character_),
     Educjefe1 = ifelse(Parent_jh == 1, G_Educ, NA_real_),
-    Educconyugue = ifelse(Parent_jh == 2, G_Educ, NA_real_),
-    Educhijos = ifelse(Parent_jh == 3, G_Educ, NA_real_),
+    Educconyugue = ifelse(Parent_jh == 2, Educ, NA_real_),
+    Educhijos = ifelse(Parent_jh == 3, Educ, NA_real_),
     SS_Jefe = ifelse(Parent_jh == 1, SS, NA_character_),
     SS_Conyugue = ifelse(Parent_jh == 2, SS, NA_character_),
-    categocupjefe = ifelse(Parent_jh == 1, Act_Ocup, NA_character_),
-    categocupconyugue = ifelse(Parent_jh == 2, Act_Ocup, NA_character_),
-    categocuphijos = ifelse(Parent_jh == 3, Act_Ocup, NA_character_),
-    empleadodomestico = ifelse(Parent_jh == 6, Parent_jh, NA_character_),
-    tiempotrabajojefe = ifelse(Parent_jh == 1, Exp_Emp, NA_real_),
+    tiempotrabajojefe_meses = ifelse(Parent_jh == 1, Exp_Emp, NA_real_),
     tiempotrabajoconyugue = ifelse(Parent_jh == 2, Exp_Emp, NA_real_),
     posicionocupacionjefe = ifelse(Parent_jh == 1, Cat_Ocup, NA_character_),
     posicionocupacionconyugue = ifelse(Parent_jh == 2, Cat_Ocup, NA_character_),
+    categocupjefe = ifelse(Parent_jh == 1, Act_Ocup, NA_character_),
+    categocupconyugue = ifelse(Parent_jh == 2, Act_Ocup, NA_character_),
+    categocuphijos = ifelse(Parent_jh == 3, Act_Ocup, NA_character_),
     horastrabajadasjefe = ifelse(Parent_jh == 1, Hrs_Trab, NA_real_),
     horastrabajadasconyugue = ifelse(Parent_jh == 2, Hrs_Trab, NA_real_),
     especiejefe = ifelse(Parent_jh == 1, Otros_Ing, NA_character_),
     especieconyugue = ifelse(Parent_jh == 2, Otros_Ing, NA_character_),
-    estratojefe= ifelse(Parent_jh == 2, Estrato1, NA_real_),
-    otronegociojefe= ifelse(Parent_jh == 1, Act_Sec, NA_real_),
-    otronegocioconyugue= ifelse(Parent_jh == 2 ,Act_Sec , NA_real_),
-    otrashorasjefe= ifelse(Parent_jh == 1 ,Hrs_Act_Sec , NA_real_),
-    otrashorasconyugue= ifelse(Parent_jh == 2 ,Hrs_Act_Sec , NA_real_),
+    estratojefe = ifelse(Parent_jh == 2, Estrato1, NA_real_),
+    otronegociojefe = ifelse(Parent_jh == 1, Act_Sec, NA_real_),
+    otronegocioconyugue = ifelse(Parent_jh == 2 ,Act_Sec , NA_real_),
+    otrashorasjefe = ifelse(Parent_jh == 1 ,Hrs_Act_Sec , NA_real_),
+    otrashorasconyugue = ifelse(Parent_jh == 2 ,Hrs_Act_Sec , NA_real_),
     Jefe_Hogar_Mujer = ifelse(Parent_jh == 1 & Sexo == 2, 1, 0))
 
 
@@ -212,7 +215,7 @@ train_personas <- train_personas %>%
 
 variables_Jefe <- train_personas %>% 
   filter(Parent_jh == 1) %>%  # Filtra solo el jefe de hogar
-  select(id, edadjefe, sexojefe, Educjefe, Educjefe1, SS_Jefe,categocupjefe,tiempotrabajojefe,
+  select(id, edadjefe, sexojefe, Educjefe, Educjefe1, SS_Jefe,categocupjefe,tiempotrabajojefe_meses,
          posicionocupacionjefe,horastrabajadasjefe,especiejefe ,Estrato1,otronegociojefe,
           otrashorasjefe,total_ocupados,total_desocupados,total_inactivos,htrabaocupados,niños6,niños6a12,niños12a18,niños18,
          Ingreso_Total_Por_Hogar, htrabaocupados_prop,Jefe_Hogar_Mujer, anos_educ_promedio_hijos,edad_promediohijos,Subsidio , Subsidio_Familia )
@@ -304,4 +307,105 @@ variables_categoricas <- c("sexojefe",
                            "Indigente")
                 
 train_hogares <- train_hogares %>% mutate_at(variables_categoricas, as.factor)
+
+
+# Convierte a variable binaria
+train_hogares$Pobre <- ifelse(train_hogares$Pobre == "si", 1, 0)
+train_hogares$sexojefe <- ifelse(train_hogares$sexojefe == "Male", 1, 0)
+train_hogares <- train_hogares %>%
+  mutate(Arriendo = ifelse(is.na(Pag_Arriendo_Est), Pag_Arriendo, Pag_Arriendo_Est))
+
+
+##--------------------------- Bases de Datos Variables Seleccionadas------------------##
+
+
+train_hogares1 <- train_hogares[ c("id","Dominio", "Habit_por_Hogar", "Dormit", "Arriendo","Estrato1", "Ing_perc_ug", "Ingreso_Total_Por_Hogar", 
+                                                   "Linea_Indigencia", "Linea_Pobreza", "Pobre", "edadjefe","sexojefe","Educjefe", "Educjefe1", 
+                                                   "categocupjefe", "tiempotrabajojefe_meses", "posicionocupacionjefe","horastrabajadasjefe","total_ocupados", 
+                                                  "htrabaocupados","niños18", "anos_educ_promedio_hijos", "edad_promediohijos", "Subsidio", 
+                                                   "Subsidio_Familia", "SS_Jefe", "Educconyugue")]
+
+train_hogares1 %>%
+  summarise_all(~sum(is.na(.))) %>% transpose()
+
+# Revisión de los datos de habitaciones por hogar
+promedio_habit_hogar <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(Media_hh = mean(Habit_por_Hogar, na.rm = TRUE),
+            Min_hh = min(Habit_por_Hogar, na.rm = TRUE),
+            Max_hh = max(Habit_por_Hogar, na.rm = TRUE),
+            sd_hh = sd(Habit_por_Hogar, na.rm = TRUE))
+promedio_habit_hogar
+
+# Imputar en los valores extremos para las habitaciones por hogar de las manizales y barranquilla el promedio global de país
+media_habit_hogar <- mean(train_hogares1$Habit_por_Hogar, na.rm = TRUE)
+train_hogares1$Habit_por_Hogar <- ifelse(train_hogares1$Habit_por_Hogar >= 43, media_habit_hogar, train_hogares1$Habit_por_Hogar)
+
+
+# Promedio Ing_perc_ug por Departamento
+promedio_Ing_perc_ug <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(media_Ing_perc_ug = mean(Ing_perc_ug, na.rm = TRUE))
+promedio_Ing_perc_ug
+train_hogares1 <- left_join(train_hogares1, promedio_Ing_perc_ug %>% select(Dominio, media_Ing_perc_ug), by = "Dominio")
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(Ing_perc_ug = ifelse(Ing_perc_ug == 0, media_Ing_perc_ug, Ing_perc_ug))
+train_hogares1$media_Ing_perc_ug <- NULL
+
+
+train_hogares1$R_Ingreso <- ifelse(train_hogares1$Ingreso_Total_Por_Hogar != 0 & train_hogares1$Ing_perc_ug != 0, 
+                                   train_hogares1$Ingreso_Total_Por_Hogar / train_hogares1$Ing_perc_ug, NA)
+
+# Imputar en el valor minimo para la relación ingreso
+promedio_R_Ingreso <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(media_R_Ingreso = mean(R_Ingreso, na.rm = TRUE))
+promedio_R_Ingreso
+ 
+
+train_hogares1 <- left_join(train_hogares1, promedio_R_Ingreso %>% select(Dominio, media_R_Ingreso), by = "Dominio")  
+
+train_hogares1$Ingreso_Total_Por_Hogar <- ifelse(train_hogares1$Ingreso_Total_Por_Hogar == 0, 
+                                   train_hogares1$media_R_Ingreso*train_hogares1$Ing_perc_ug, train_hogares1$Ingreso_Total_Por_Hogar)
+
+
+train_hogares1$R_Arriendo <- round(train_hogares1$Arriendo / train_hogares1$Ingreso_Total_Por_Hogar, 2)
+
+# Imputar en el valor minimo para la relación ingreso
+promedio_R_Arriendo <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(media_R_Arriendo = mean(R_Arriendo, na.rm = TRUE))
+promedio_R_Arriendo
+
+train_hogares1 <- left_join(train_hogares1, promedio_R_Arriendo %>% select(Dominio, media_R_Arriendo), by = "Dominio")
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(R_Arriendo = ifelse(R_Arriendo >= 1 | R_Arriendo == 0, media_R_Arriendo, R_Arriendo))
+
+train_hogares1$Arriendo <- train_hogares1$Ingreso_Total_Por_Hogar*train_hogares1$R_Arriendo
+
+
+# Revisión de stadística descriptivas de variables para el Modelo
+Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar, 
+                                         Dormit, 
+                                         Arriendo,
+                                         Ing_perc_ug,
+                                         Ingreso_Total_Por_Hogar,
+                                         edadjefe,
+                                         Educjefe,
+                                         tiempotrabajojefe_meses,
+                                         horastrabajadasjefe,
+                                         htrabaocupados,
+                                         niños18,
+                                         anos_educ_promedio_hijos,
+                                         edad_promediohijos,
+                                         Educconyugue,
+                                         Estrato1)
+
+stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+
+#Tabla_Ra_ <- "C:/Output R/Problem_Set3/Taller_3/Tabla_Ra.xlsx"
+#write_xlsx(train_hogares1, path = Tabla_Ra_)
+
 
