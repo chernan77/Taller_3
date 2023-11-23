@@ -224,16 +224,44 @@ train_hogares <- left_join(train_hogares, variables_Jefe, by = "id")
 variables_conyugue <- train_personas %>% 
   filter(Parent_jh == 2) %>%  # Filtra solo el jefe de hogar
   select(id,edadconyugue,sexoconyugue,Educconyugue,SS_Conyugue,categocupconyugue,tiempotrabajoconyugue
-         ,posicionocupacionconyugue,horastrabajadasconyugue,especieconyugue,
-         otronegocioconyugue,otrashorasconyugue )
+         ,posicionocupacionconyugue,horastrabajadasconyugue,especieconyugue,categocuphijos,
+         otronegocioconyugue,otrashorasconyugue)
 
 variables_conyugue<- distinct(variables_conyugue, id, .keep_all = TRUE)
 
 train_hogares <- left_join(train_hogares, variables_conyugue, by = "id")
 
+train_hogares <- train_hogares %>%
+  mutate(edadconyugue = ifelse(edadconyugue <= 15, mean(edadconyugue, na.rm = TRUE), edadconyugue))
+
+train_hogares$SS_Jefe <- ifelse(is.na(train_hogares$SS_Jefe), 1, train_hogares$SS_Jefe)
+train_hogares$categocupjefe <- ifelse(is.na(train_hogares$categocupjefe), 1, train_hogares$categocupjefe)
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 4, 
+                                          4, posicionocupacionjefe))
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 6, 
+                                            4, posicionocupacionjefe))
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 2, 
+                                        4, posicionocupacionjefe)) 
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 3, 
+                                        7, posicionocupacionjefe)) 
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 5, 
+                                        9, posicionocupacionjefe)) 
+train_hogares <- train_hogares %>%
+  mutate(posicionocupacionjefe = ifelse(is.na(posicionocupacionjefe)  & train_hogares$categocupjefe == 1, 
+                                        1, posicionocupacionjefe)) 
+
+train_hogares$SS_Jefe <- factor(train_hogares$SS_Jefe, levels = c(1, 2, 9), labels = c("Cotiza a un Seguro", "No Cotiza", "Otro"))
+
+train_hogares$categocupjefe <- factor(train_hogares$categocupjefe, levels = c(1, 2, 3, 4, 5, 6), labels = c("Trabajando", "Buscando trabajo", 
+                                                                                                              "Estudiando", "Oficios del hogar", 
+                                                                                                              "Incapacitado permanente para trabajar", 
+                                                                                                              "Otra"))
 #### Corregir las Variables para la base de datos train_hogares
-
-
 train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male",
                                    sexojefe==2 ~"Female"),
                                    Educjefe= case_when(Educjefe==1 ~"Ninguno",
@@ -243,15 +271,13 @@ train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male
                                                        Educjefe==5 ~"Educación media",
                                                        Educjefe==6 ~"Superior o universitaria",
                                                        Educjefe==9 ~"No sabe"),
-                                  SS_Jefe= case_when(SS_Jefe==1 ~"Cotiza a un Seguro",
-                                                     SS_Jefe==2 ~"No Cotiza",
-                                                     SS_Jefe==9 ~"Otro"),
-                                  categocupjefe= case_when(categocupjefe==1 ~"Trabajando",
-                                                           categocupjefe==2 ~"Buscando trabajo",
-                                                           categocupjefe==3 ~"Estudiando",
-                                                           categocupjefe==4 ~"Oficios del hogar",
-                                                           categocupjefe==5 ~"Incapacitado permanente para trabajar f",
-                                                           categocupjefe==6 ~"Otra"),
+                                   Educconyugue= case_when(Educconyugue==1 ~"Ninguno",
+                                                           Educconyugue==2 ~"Preescolar",
+                                                           Educconyugue==3 ~"Educación básica en el ciclo de primaria",
+                                                           Educconyugue==4 ~"Educación básica en el ciclo de secundaria",
+                                                           Educconyugue==5 ~"Educación media",
+                                                           Educconyugue==6 ~"Superior o universitaria",
+                                                           Educconyugue==9 ~"No sabe"),
                                   posicionocupacionjefe= case_when(posicionocupacionjefe==1 ~"Obrero",
                                                                    posicionocupacionjefe==2 ~"empleado del gobierno",
                                                                    posicionocupacionjefe==3 ~"Empleado doméstico",
@@ -286,9 +312,16 @@ train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male
                                                           especieconyugue==3~"No Sabe"),
                                Pobre= case_when(Pobre==1 ~"si",                     
                                                 Pobre==0~"no"),
-                          Indigente= case_when(Indigente==1 ~"si",                     
-                                                    Indigente==0~"no"))
-                    
+                          Indigente= case_when(Indigente==1 ~"si",
+                                               Indigente==0 ~"no"),
+                          Prop_Vivienda = case_when(Prop_Vivienda==1 ~"Propia Pagada",
+                                                    Prop_Vivienda==2 ~"Propia por Pagar",
+                                                    Prop_Vivienda==3 ~"En Arriendo",
+                                                    Prop_Vivienda==4 ~"En Usufructo",
+                                                    Prop_Vivienda==5 ~"Ocupante",
+                                                    Prop_Vivienda==5 ~"Otra"))
+           
+                                    
 # Definimos las variables categóricas
 variables_categoricas <- c("sexojefe",
                            "Educjefe",
@@ -309,21 +342,22 @@ variables_categoricas <- c("sexojefe",
 train_hogares <- train_hogares %>% mutate_at(variables_categoricas, as.factor)
 
 
+
 # Convierte a variable binaria
 train_hogares$Pobre <- ifelse(train_hogares$Pobre == "si", 1, 0)
 train_hogares$sexojefe <- ifelse(train_hogares$sexojefe == "Male", 1, 0)
 train_hogares <- train_hogares %>%
-  mutate(Arriendo = ifelse(is.na(Pag_Arriendo_Est), Pag_Arriendo, Pag_Arriendo_Est))
+mutate(Arriendo = ifelse(is.na(Pag_Arriendo_Est), Pag_Arriendo, Pag_Arriendo_Est))
 
 
 ##--------------------------- Bases de Datos Variables Seleccionadas------------------##
 
 
-train_hogares1 <- train_hogares[ c("id","Dominio", "Habit_por_Hogar", "Dormit", "Arriendo","Estrato1", "Ing_perc_ug", "Ingreso_Total_Por_Hogar", 
-                                                   "Linea_Indigencia", "Linea_Pobreza", "Pobre", "edadjefe","sexojefe","Educjefe", "Educjefe1", 
-                                                   "categocupjefe", "tiempotrabajojefe_meses", "posicionocupacionjefe","horastrabajadasjefe","total_ocupados", 
+train_hogares1 <- train_hogares[ c("id","Dominio","Per_por_Hogar","Per_Uni_Gasto", "Habit_por_Hogar", "Dormit", "Arriendo","Estrato1", "Ing_perc_ug", "Ingreso_Total_Por_Hogar", 
+                                                   "Linea_Indigencia","Linea_Pobreza","edadconyugue", "Pobre", "edadjefe","sexojefe","Educjefe", "Educjefe1", "Educconyugue",
+                                                   "categocupjefe","categocupconyugue","categocuphijos", "tiempotrabajojefe_meses", "posicionocupacionjefe","horastrabajadasjefe","total_ocupados", 
                                                   "htrabaocupados","niños18", "anos_educ_promedio_hijos", "edad_promediohijos", "Subsidio", 
-                                                   "Subsidio_Familia", "SS_Jefe", "Educconyugue")]
+                                                   "Subsidio_Familia","Prop_Vivienda", "SS_Jefe","htrabaocupados_prop")]
 
 train_hogares1 %>%
   summarise_all(~sum(is.na(.))) %>% transpose()
@@ -386,6 +420,24 @@ train_hogares1 <- train_hogares1 %>%
 train_hogares1$Arriendo <- train_hogares1$Ingreso_Total_Por_Hogar*train_hogares1$R_Arriendo
 
 
+# Analisis y depuración de las Horas trabajadas
+ht_jornada_oficial <- 48
+desv_htj <-  round(sd(train_hogares1$horastrabajadasjefe, na.rm = TRUE))
+desv_ht_op <-  round(sd(train_hogares1$htrabaocupados_prop, na.rm = TRUE))
+umbral <- round(ht_jornada_oficial + 2*desv_htj,0)
+umbral2 <- round(ht_jornada_oficial + 2.5*desv_ht_op,0)
+umbral2_min <- round(ht_jornada_oficial - 2.5*desv_ht_op,0)
+
+train_hogares1$horastrabajadasjefe[train_hogares1$horastrabajadasjefe > umbral] <- umbral
+train_hogares1$htrabaocupados_prop[train_hogares1$htrabaocupados_prop > umbral2] <- umbral2
+train_hogares1$htrabaocupados_prop[train_hogares1$htrabaocupados_prop < umbral2_min] <- umbral2_min
+
+train_hogares1$htrabaocupados <- train_hogares1$htrabaocupados_prop*train_hogares1$total_ocupados
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(htrabaocupados = ifelse(is.na(htrabaocupados)  & train_hogares1$categocupjefe == "Trabajando", 
+                                          mean(htrabaocupados, na.rm = TRUE), htrabaocupados))
+
 # Revisión de stadística descriptivas de variables para el Modelo
 Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar, 
                                          Dormit, 
@@ -394,18 +446,233 @@ Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar,
                                          Ingreso_Total_Por_Hogar,
                                          edadjefe,
                                          Educjefe,
+                                         edadconyugue,
+                                         Educconyugue,
                                          tiempotrabajojefe_meses,
                                          horastrabajadasjefe,
+                                         htrabaocupados_prop,
+                                         htrabaocupados,
+                                         niños18,
+                                         anos_educ_promedio_hijos,
+                                         edad_promediohijos,
+                                         Estrato1)
+
+stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+
+
+promedio_exp_emp <- train_hogares1 %>%
+  filter(tiempotrabajojefe_meses != 0) %>%  # Excluir ceros
+  group_by(Dominio) %>%
+  summarize(
+    media_exp_emp = round(mean(tiempotrabajojefe_meses, na.rm = TRUE)),
+    mediana_exp_emp = median(tiempotrabajojefe_meses, na.rm = TRUE),
+    max_exp_emp = max(tiempotrabajojefe_meses, na.rm = TRUE),
+    min_exp_emp = min(tiempotrabajojefe_meses, na.rm = TRUE),
+    desv_exp_emp = sd(tiempotrabajojefe_meses, na.rm = TRUE),
+    lim_sup_exp_emp = round(media_exp_emp + 2.5*desv_exp_emp),
+    moda_exp_emp = as.numeric(names(sort(table(tiempotrabajojefe_meses), decreasing = TRUE)[1]))
+  )
+print(promedio_exp_emp)
+
+
+train_hogares1 <- left_join(train_hogares1, promedio_exp_emp %>% select(Dominio, lim_sup_exp_emp), by = "Dominio")
+train_hogares1 <- left_join(train_hogares1, promedio_exp_emp %>% select(Dominio, media_exp_emp), by = "Dominio")
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses >= lim_sup_exp_emp, lim_sup_exp_emp, tiempotrabajojefe_meses))
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupjefe == "Trabajando", 
+                                          media_exp_emp, tiempotrabajojefe_meses))
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupconyugue == "Trabajando", 
+                                          media_exp_emp, tiempotrabajojefe_meses))
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0 & categocupconyugue == "Trabajando",
+                                          media_exp_emp, tiempotrabajojefe_meses))
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(is.na(tiempotrabajojefe_meses) & categocupconyugue == "Trabajando",
+                                          media_exp_emp, tiempotrabajojefe_meses))
+train_hogares1 <- train_hogares1 %>%
+  mutate(tiempotrabajojefe_meses = ifelse(is.na(tiempotrabajojefe_meses) & train_hogares1$SS_Jefe == "Cotiza a un Seguro", 
+                                          media_exp_emp, tiempotrabajojefe_meses))
+
+# Analisis de Educación promedio hijos
+media_años_educ_hijos <-  round(mean(train_hogares1$anos_educ_promedio_hijos, na.rm = TRUE))
+train_hogares1$anos_educ_promedio_hijos <- ifelse(is.na(train_hogares1$anos_educ_promedio_hijos) & train_hogares1$niños18 >= 1, 
+                                                  media_años_educ_hijos, train_hogares1$anos_educ_promedio_hijos)
+
+train_hogares1$anos_educ_promedio_hijos <- ifelse(is.na(train_hogares1$anos_educ_promedio_hijos) & train_hogares1$niños18 == 0, 
+                                                  0, train_hogares1$anos_educ_promedio_hijos)
+
+# Analisis de Edad promedio hijos
+
+train_hogares1 <- train_hogares1 %>%
+  mutate(edad_promediohijos = ifelse(edad_promediohijos == 0, mean(edad_promediohijos, na.rm = TRUE), edad_promediohijos))
+
+train_hogares1$edad_promediohijos <- ifelse(is.na(train_hogares1$edad_promediohijos), 
+                                            0, train_hogares1$edad_promediohijos)
+
+train_hogares1$Subsidio <- ifelse(is.na(train_hogares1$Subsidio), 
+                                            0, train_hogares1$Subsidio)
+
+
+train_hogares1$Prop_Vivienda <- ifelse(is.na(train_hogares1$Prop_Vivienda), 
+                                 "Ocupante", train_hogares1$Prop_Vivienda)
+
+
+# Revisión de stadística descriptivas de variables para el Modelo
+Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar, 
+                                         Dormit, 
+                                         Per_Uni_Gasto,
+                                         Per_por_Hogar,
+                                         Arriendo,
+                                         Ing_perc_ug,
+                                         Ingreso_Total_Por_Hogar,
+                                         edadjefe,
+                                         Educjefe,
+                                         edadconyugue,
+                                         Educconyugue,
+                                         tiempotrabajojefe_meses,
+                                         horastrabajadasjefe,
+                                         htrabaocupados_prop,
                                          htrabaocupados,
                                          niños18,
                                          anos_educ_promedio_hijos,
                                          edad_promediohijos,
                                          Educconyugue,
+                                         Prop_Vivienda,
                                          Estrato1)
 
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 
+
+# Variables para las regresiones de predicción de pobreza:
+
+train_hogares1 <- train_hogares1 %>% rename(Sexo_JHogar=sexojefe) #(Variable 1)
+train_hogares1 <- train_hogares1 %>% rename(Edad_JHogar=edadjefe) #(Variable 2)
+train_hogares1 <- train_hogares1 %>% rename(Pers_por_Hogar=Per_por_Hogar) #(Variable 3)
+train_hogares1 <- train_hogares1 %>% rename(Edad_prom_Hijos=edad_promediohijos) #(Variable 4)
+train_hogares1 <- train_hogares1 %>% rename(Menores_18Años=niños18) #(Variable 5)
+train_hogares1 <- train_hogares1 %>% rename(Estrato=Estrato1)  #(Variable 6)
+train_hogares1 <- train_hogares1 %>% rename(Exp_Empresa=tiempotrabajojefe_meses)  #(Variable 7)
+train_hogares1 <- train_hogares1 %>% rename(Hrs_Ocupados=htrabaocupados)  #(Variable 8)
+train_hogares1 <- train_hogares1 %>% rename(Total_Ocup=total_ocupados)  #(Variable 9)
+train_hogares1 <- train_hogares1 %>% rename(Cat_Ocup_JHogar=categocupjefe)  #(Variable 10)
+train_hogares1 <- train_hogares1 %>% rename(Posc_Ocup_JHogar=posicionocupacionjefe)  #(Variable 11)
+train_hogares1 <- train_hogares1 %>% rename(Educ_JHogar=Educjefe)  #(Variable 12)
+train_hogares1 <- train_hogares1 %>% rename(Educ_prom_Hijos=anos_educ_promedio_hijos)  #(Variable 13)
+train_hogares1 <- train_hogares1 %>% rename(Educ_Conyugue=Educconyugue)  #(Variable 14)
+train_hogares1 <- train_hogares1 %>% rename(Edad_Conyugue=edadconyugue)  #(Variable 15)
+train_hogares1 <- train_hogares1 %>% rename(Hab_por_Hogar=Habit_por_Hogar)  #(Variable 16)
+train_hogares1 <- train_hogares1 %>% rename(Dormit_Hogar=Dormit)  #(Variable 17)
+train_hogares1 <- train_hogares1 %>% rename(Propieadad_Vivienda=Prop_Vivienda)  #(Variable 18)
+train_hogares1 <- train_hogares1 %>% rename(Pago_Arriendo=Arriendo)  #(Variable 19)
+train_hogares1 <- train_hogares1 %>% rename(Recibe_Subsidios=Subsidio)  #(Variable 20)
+train_hogares1 <- train_hogares1 %>% rename(SS_Jefe=SS_Jefe)  #(Variable 21)
+train_hogares1 <- train_hogares1 %>% rename(Ingreso_Hogar=Ingreso_Total_Por_Hogar)  #(Variable 22)
+train_hogares1 <- train_hogares1 %>% rename(Ingreso_Perc_Hogar=Ing_perc_ug)  #(Variable 23)
+train_hogares1 <- train_hogares1 %>% rename(Pobreza=Pobre)  #(Variable 24)
+
+
+Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
+                                    "Estrato","Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar", 
+                                    "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar","Propieadad_Vivienda",
+                                    "Pago_Arriendo", "Recibe_Subsidios","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+
+Tabla_Stat <- Data1  %>% select(Hab_por_Hogar, 
+                                         Dormit_Hogar, 
+                                         Pers_por_Hogar,
+                                         Pago_Arriendo,
+                                         Ingreso_Perc_Hogar,
+                                         Ingreso_Hogar,
+                                         Edad_JHogar,
+                                         Educ_JHogar,
+                                         Total_Ocup,
+                                         Menores_18Años,
+                                         Educ_prom_Hijos,
+                                         SS_Jefe,
+                                         Propieadad_Vivienda,
+                                         Pobreza,
+                                         Recibe_Subsidios,
+                                         Estrato)
+
+stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+
+
+Data2 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
+                                   "Estrato","Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
+                                   "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos","Educ_Conyugue","Edad_Conyugue", "Hab_por_Hogar","Dormit_Hogar","Propieadad_Vivienda",
+                                   "Pago_Arriendo", "Recibe_Subsidios","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+
+Data2 <- Data2[complete.cases(Data2$Hrs_Ocupados), ]
+Data2 <- Data2[complete.cases(Data2$Exp_Empresa), ]
+Data2 %>%
+  summarise_all(~sum(is.na(.))) %>% transpose()
+
+Tabla_Stat <- Data2  %>% select(Hab_por_Hogar, 
+                                         Dormit_Hogar, 
+                                         Pers_por_Hogar,
+                                         Pago_Arriendo,
+                                         Ingreso_Perc_Hogar,
+                                         Ingreso_Hogar,
+                                         Edad_JHogar,
+                                         Educ_JHogar,
+                                         Exp_Empresa,
+                                         Hrs_Ocupados,
+                                         Total_Ocup,
+                                         Menores_18Años,
+                                         Educ_prom_Hijos,
+                                         Educ_Conyugue,
+                                         SS_Jefe,
+                                         Propieadad_Vivienda,
+                                         Pobreza,
+                                         Recibe_Subsidios,
+                                         Estrato)
+
+stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+
+
+Data3 <- train_hogares2[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
+                                    "Estrato","Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
+                                    "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Educ_Conyugue","Edad_Conyugue", "Hab_por_Hogar","Dormit_Hogar","Propieadad_Vivienda",
+                                    "Pago_Arriendo", "Recibe_Subsidios","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+
+
+Data3  <- Data3[complete.cases(Data3$Educ_Conyugue), ]
+Data3  <- Data3[complete.cases(Data3$Hrs_Ocupados), ]
+Data3  <- Data3[complete.cases(Data3$Exp_Empresa), ]
+
+Data3 %>%
+  summarise_all(~sum(is.na(.))) %>% transpose()
+
+Tabla_Stat <- Data3  %>% select(Hab_por_Hogar, 
+                                Dormit_Hogar, 
+                                Pers_por_Hogar,
+                                Pago_Arriendo,
+                                Ingreso_Perc_Hogar,
+                                Ingreso_Hogar,
+                                Edad_JHogar,
+                                Educ_JHogar,
+                                Exp_Empresa,
+                                Hrs_Ocupados,
+                                Total_Ocup,
+                                Menores_18Años,
+                                Educ_prom_Hijos,
+                                Educ_Conyugue,
+                                Edad_Conyugue,
+                                SS_Jefe,
+                                Propieadad_Vivienda,
+                                Pobreza,
+                                Recibe_Subsidios,
+                                Estrato)
+
+stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 #Tabla_Ra_ <- "C:/Output R/Problem_Set3/Taller_3/Tabla_Ra.xlsx"
-#write_xlsx(train_hogares1, path = Tabla_Ra_)
+#write_xlsx(train_hogares2, path = Tabla_Ra_)
+
+
+
+
 
 
