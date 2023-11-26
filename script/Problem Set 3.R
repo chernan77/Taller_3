@@ -580,7 +580,7 @@ train_hogares1$Edad_JHogar2<- train_hogares1$Edad_JHogar^2
 
 ###########-------------------------------------------------------------DATA 1---------------------------------------------#######
 Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
-                                    "Estrato","Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar", "Recibe_Subsidios",
+                                    "Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar",
                                     "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar","Propieadad_Vivienda",
                                     "Pago_Arriendo", "SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
 
@@ -633,9 +633,9 @@ Pronost_1.2  <- test_Data1[ c("id", "Pobreza_hat1")]
   
 ###########-------------------------------------------------------------DATA 2---------------------------------------------#######
 Data2 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
-                                   "Estrato","Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
+                                   "Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
                                    "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar","Propieadad_Vivienda",
-                                   "Pago_Arriendo", "Recibe_Subsidios","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+                                   "Pago_Arriendo","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
 
 Data2 <- Data2[complete.cases(Data2$Hrs_Ocupados), ]
 Data2 <- Data2[complete.cases(Data2$Exp_Empresa), ]
@@ -696,9 +696,9 @@ Pronost_2.2  <- test_Data2[ c("id", "Pobreza_hat3")]
 
 ###########-------------------------------------------------------------DATA 3---------------------------------------------#######
 Data3 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar", "Edad_JHogar2", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
-                                    "Estrato","Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
+                                    "Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
                                     "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Educ_Conyugue","Edad_Conyugue", "Hab_por_Hogar","Dormit_Hogar",
-                                    "Propieadad_Vivienda", "Pago_Arriendo", "Recibe_Subsidios","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+                                    "Propieadad_Vivienda", "Pago_Arriendo","SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
 
 
 Data3  <- Data3[complete.cases(Data3$Educ_Conyugue), ]
