@@ -996,9 +996,6 @@ test_hogares <- test_hogares %>% mutate(Sexo_JHogar= case_when(Sexo_JHogar==1 ~"
                                                                           Propiedad_Vivienda==5 ~"Ocupante",
                                                                           Propiedad_Vivienda==6 ~"Otra"))
 
-
-
-
 promedio_exp_emp <- test_hogares %>%
   filter(Exp_Empresa != 0) %>%  # Excluir ceros
   group_by(Dominio) %>%
