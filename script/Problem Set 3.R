@@ -597,9 +597,7 @@ Tabla_Stat <- Data1  %>% select(Hab_por_Hogar,
                                          Educ_prom_Hijos,
                                          SS_Jefe,
                                          Propieadad_Vivienda,
-                                         Pobreza,
-                                         Recibe_Subsidios,
-                                         Estrato)
+                                         Pobreza)
 
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 
@@ -612,8 +610,8 @@ test_Data1  <- testing(data_split)
 # Modelos Logit con todo el conjunto de variables y observaciones de Data1
 # Modelo Logit1:
 Model1.1 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + 
-                  Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + 
-                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Hogar, data = train_Data1, family = "binomial")
+                  Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + 
+                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Hogar, data = train_Data1, family = "binomial")
 summary(Model1.1,type="text")
 test_Data1 <- test_Data1 %>% mutate(prob_hat=predict(Model1.1,newdata = test_Data1, type = "response")) 
 rule <- 1/2 # Bayes Rule
@@ -622,8 +620,8 @@ Pronost_1.1  <- test_Data1[ c("id", "Pobreza_hat")]
   
 # Modelo Logit2:
 Model1.2 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + 
-                  Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + 
-                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data1, family = "binomial")
+                  Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + 
+                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data1, family = "binomial")
 summary(Model1.2,type="text")
 test_Data1 <- test_Data1 %>% mutate(prob_hat1=predict(Model1.2,newdata = test_Data1, type = "response"))
 test_Data1 <-  test_Data1  %>% mutate(Pobreza_hat1=ifelse(prob_hat1>rule,1,0))
@@ -657,9 +655,7 @@ Tabla_Stat <- Data2  %>% select(Hab_por_Hogar,
                                          Educ_prom_Hijos,
                                          SS_Jefe,
                                          Propieadad_Vivienda,
-                                         Pobreza,
-                                         Recibe_Subsidios,
-                                         Estrato)
+                                         Pobreza)
 
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 
@@ -675,8 +671,8 @@ test_Data2  <- testing(data_split)
 # Modelos Logit con todo el conjunto de variables y observaciones de Data1
 # Modelo Logit2.1:
 Model2.1 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + Exp_Empresa + Hrs_Ocupados +
-                  Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +
-                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Hogar, data = train_Data2, family = "binomial")
+                  Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +
+                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Hogar, data = train_Data2, family = "binomial")
 
 summary(Model2.1,type="text")
 test_Data2 <- test_Data2 %>% mutate(prob_hat2=predict(Model2.1,newdata = test_Data2, type = "response")) 
@@ -686,8 +682,8 @@ Pronost_2.1  <- test_Data2[ c("id", "Pobreza_hat2")]
 
 # Modelo Logit2.2:
 Model2.2 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + Exp_Empresa + Hrs_Ocupados +
-                  Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +
-                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data2, family = "binomial")
+                  Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +
+                  Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data2, family = "binomial")
 
 summary(Model2.2,type="text")
 test_Data2 <- test_Data2 %>% mutate(prob_hat3=predict(Model2.2,newdata = test_Data2, type = "response"))
@@ -722,9 +718,8 @@ Tabla_Stat <- Data3  %>% select(Hab_por_Hogar,
                                 Edad_Conyugue,
                                 SS_Jefe,
                                 Propieadad_Vivienda,
-                                Pobreza,
-                                Recibe_Subsidios,
-                                Estrato)
+                                Pobreza)
+                               
 
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 
@@ -740,8 +735,8 @@ test_Data3  <- testing(data_split)
 # Modelos Logit con todo el conjunto de variables y observaciones de Data1
 # Modelo Logit3.1:
 Model3.1 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + Exp_Empresa + Hrs_Ocupados +
-                Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +  Educ_Conyugue +
-                Edad_Conyugue + Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Hogar, data = train_Data3, family = "binomial")
+                Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar +  Educ_Conyugue +
+                Edad_Conyugue + Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Hogar, data = train_Data3, family = "binomial")
 
 summary(Model3.1,type="text")
 test_Data3 <- test_Data3 %>% mutate(prob_hat4=predict(Model3.1,newdata = test_Data3, type = "response")) 
@@ -751,8 +746,8 @@ Pronost_3.1  <- test_Data3[ c("id", "Pobreza_hat4")]
 
 # Modelo Logit3.2:
 Model3.2 <- glm(Pobreza ~ Sexo_JHogar + Edad_JHogar + Edad_JHogar2 + Pers_por_Hogar + Menores_18Años + Exp_Empresa + Hrs_Ocupados +
-                  Estrato + Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + Educ_Conyugue +
-                  Edad_Conyugue + Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + Recibe_Subsidios + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data3, family = "binomial")
+                  Total_Ocup + Cat_Ocup_JHogar + Posc_Ocup_JHogar + Educ_JHogar + Educ_prom_Hijos + Hab_por_Hogar + Educ_Conyugue +
+                  Edad_Conyugue + Dormit_Hogar + Propieadad_Vivienda + Pago_Arriendo + SS_Jefe + Ingreso_Perc_Hogar, data = train_Data3, family = "binomial")
 
 summary(Model3.2,type="text")
 test_Data3 <- test_Data3 %>% mutate(prob_hat5=predict(Model3.2,newdata = test_Data3, type = "response"))
