@@ -275,9 +275,16 @@ train_hogares$posicionocupacionjefe <- factor(train_hogares$posicionocupacionjef
                                                                                                               "Incapacitado permanente para trabajar", 
                                                                                                             "Otra Actividad"))
 
+
+train_hogares$categocupjefe <- factor(train_hogares$categocupjefe, levels = c(1, 2, 3, 4, 5, 6,7,8, 9), labels = c("Obrero o empleado de empresa particular", "Obrero o empleado del gobierno",
+                                                                                                                     "Empleado doméstico","Trabajador por cuenta propia",
+                                                                                                                     "Patrón o empleador", "Trabajador familiar sin remuneración",
+                                                                                                                     "Trabajador sin remuneración en empresas o negocios de otros hogares",
+                                                                                                                     "Jornalero o peón","Otro"))
+
 train_hogares$Subsidio <- factor(train_hogares$Subsidio, levels = c(1, 0), labels = c("si","no"))
+
 #### Corregir las Variables para la base de datos train_hogares
-                                 
 train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male",
                                                               sexojefe==2 ~"Female"),
                                    Educjefe= case_when(Educjefe==1 ~"Ninguno",
@@ -294,15 +301,6 @@ train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male
                                                            Educconyugue==5 ~"Educación media",
                                                            Educconyugue==6 ~"Superior o universitaria",
                                                            Educconyugue==9 ~"No sabe"),
-                                   categocupjefe= case_when(categocupjefe==1 ~"Obrero",
-                                                            categocupjefe==2 ~"empleado del gobierno",
-                                                            categocupjefe==3 ~"Empleado doméstico",
-                                                            categocupjefe==4 ~"Trabajador por cuenta propia",
-                                                            categocupjefe==5 ~"Patrón o empleador",
-                                                            categocupjefe==6 ~"Trabajador familiar sin remuneración",
-                                                            categocupjefe==7 ~"Trabajador sinremuneración en empresas o negocios de otros hogares",
-                                                            categocupjefe==8 ~ "Jornalero o peón",
-                                                            categocupjefe==9 ~ "Otro"),
                                 especiejefe= case_when( especiejefe==1 ~"si",                     
                                                         especiejefe==2~"no",
                                                         especiejefe==3~"No Sabe"),
@@ -313,12 +311,15 @@ train_hogares <- train_hogares %>% mutate(sexojefe= case_when(sexojefe==1 ~"Male
                                 SS_Conyugue= case_when(SS_Conyugue==1 ~"Cotiza a un Seguro",
                                                        SS_Conyugue==2 ~"No Cotiza",
                                                        SS_Conyugue==9 ~"Otro"),
-                                categocupconyugue= case_when( categocupconyugue==1 ~"Trabajando",
-                                                              categocupconyugue==2 ~"Buscando trabajo",
-                                                              categocupconyugue==3 ~"Estudiando",
-                                                              categocupconyugue==4 ~"Oficios del hogar",
-                                                              categocupconyugue==5 ~"Incapacitado permanente para trabajar f",
-                                                              categocupconyugue==6 ~"Otra"),   
+                                categocupconyugue= case_when( categocupconyugue==1 ~"Obrero",
+                                                              categocupconyugue==2 ~"empleado del gobierno",
+                                                              categocupconyugue==3 ~"Empleado doméstico",
+                                                              categocupconyugue==4 ~"Trabajador por cuenta propia",
+                                                              categocupconyugue==5 ~"Patrón o empleador",
+                                                              categocupconyugue==6 ~"Trabajador familiar sin remuneración",
+                                                              categocupconyugue==7 ~"Trabajador sinremuneración en empresas o negocios de otros hogares",
+                                                              categocupconyugue==8 ~ "Jornalero o peón",
+                                                              categocupconyugue==9 ~ "Otro"),  
                                 otronegociojefe= case_when( otronegociojefe==1 ~"si",
                                                             otronegociojefe==2 ~"no"),
                                 otronegocioconyugue= case_when( otronegocioconyugue==1 ~"si",
@@ -450,7 +451,7 @@ train_hogares1$htrabaocupados_prop[train_hogares1$htrabaocupados_prop < umbral2_
 train_hogares1$htrabaocupados <- train_hogares1$htrabaocupados_prop*train_hogares1$total_ocupados
 
 train_hogares1 <- train_hogares1 %>%
-  mutate(htrabaocupados = ifelse(is.na(htrabaocupados)  & train_hogares1$categocupjefe == "Trabajando", 
+  mutate(htrabaocupados = ifelse(is.na(htrabaocupados)  & train_hogares1$categocupjefe == "Obrero o empleado de empresa particular", 
                                           mean(htrabaocupados, na.rm = TRUE), htrabaocupados))
 
 # Revisión de stadística descriptivas de variables para el Modelo
@@ -497,16 +498,13 @@ train_hogares1 <- train_hogares1 %>%
   mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses >= lim_sup_exp_emp, lim_sup_exp_emp, tiempotrabajojefe_meses))
 
 train_hogares1 <- train_hogares1 %>%
-  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupjefe == "Trabajando", 
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupjefe == "Obrero o empleado de empresa particular", 
                                           media_exp_emp, tiempotrabajojefe_meses))
 train_hogares1 <- train_hogares1 %>%
-  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupconyugue == "Trabajando", 
+  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0  & train_hogares1$categocupconyugue == "Obrero o empleado de empresa particular", 
                                           media_exp_emp, tiempotrabajojefe_meses))
 train_hogares1 <- train_hogares1 %>%
-  mutate(tiempotrabajojefe_meses = ifelse(tiempotrabajojefe_meses == 0 & categocupconyugue == "Trabajando",
-                                          media_exp_emp, tiempotrabajojefe_meses))
-train_hogares1 <- train_hogares1 %>%
-  mutate(tiempotrabajojefe_meses = ifelse(is.na(tiempotrabajojefe_meses) & categocupconyugue == "Trabajando",
+  mutate(tiempotrabajojefe_meses = ifelse(is.na(tiempotrabajojefe_meses) & categocupconyugue == "Obrero o empleado de empresa particular",
                                           media_exp_emp, tiempotrabajojefe_meses))
 train_hogares1 <- train_hogares1 %>%
   mutate(tiempotrabajojefe_meses = ifelse(is.na(tiempotrabajojefe_meses) & train_hogares1$SS_Jefe == "Cotiza a un Seguro", 
@@ -1130,6 +1128,77 @@ Data1_Test %>%
 #write_xlsx(Pronost_3.1,Tabla_1)
 #Tabla_2 <- "C:/Output R/Problem_Set3/Taller_3/tabla_2.xlsx"  
 #write_xlsx(Pronost_3.2,Tabla_2)
+
+Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
+                           "Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar",
+                           "Posc_Ocup_JHogar","Educ_JHogar", "Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
+                           "Pago_Arriendo", "SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
+
+data1 <- Data1  %>% select(Sexo_JHogar,
+                           Hab_por_Hogar, 
+                           Dormit_Hogar, 
+                           Pers_por_Hogar,
+                           Pago_Arriendo,
+                           Edad_JHogar2,
+                           Edad_JHogar,
+                           Educ_JHogar,
+                           Total_Ocup,
+                           Menores_18Años,
+                           Educ_prom_Hijos,
+                           SS_Jefe,
+                           Posc_Ocup_JHogar,
+                           Cat_Ocup_JHogar,
+                           Ingreso_Hogar)
+
+
+# Dividir los datos en conjunto de entrenamiento, validación y prueba
+# Eliminar filas con valores faltantes en toda la base de datos
+data1 <- na.omit(data1)
+
+# Luego, continúa con tu proceso de división de datos y entrenamiento del modelo
+# Dividir los datos en conjunto de entrenamiento, validación y prueba
+library(caret)
+
+# Dividir los datos en conjunto de entrenamiento y prueba de manera estratificada
+set.seed(123)
+index <- createDataPartition(data1$Ingreso_Hogar, p = 0.7, list = FALSE)
+train_data <- data1[index, ]
+test_data <- data1[-index, ]
+
+# Entrenamiento del modelo de regresión lineal usando el conjunto de entrenamiento
+lm_model <- train(
+  Ingreso_Hogar ~ ., 
+  data = train_data, 
+  method = "lm", 
+  trControl = trainControl(method = "cv"),
+  preProcess = c("center", "scale")
+)
+
+# Evaluación del modelo en el conjunto de prueba
+predictions <- predict(lm_model, newdata = test_data)
+
+# Calcular el RMSE y MAE usando funciones de caret
+rmse <- sqrt(mean((test_data$Ingreso_Hogar - predictions)^2))
+mae <- mean(abs(test_data$Ingreso_Hogar - predictions))
+
+# Mostrar los resultados
+cat("RMSE:", rmse, "\n")
+cat("MAE:", mae, "\n")
+
+# Predicciones fuera de muestra y cálculo de Pobreza
+Data1_Test$Ingreso_Hogar <- predict(lm_model, newdata = Data1_Test)
+
+Data1_Test$Ingreso_Perc_Hogar <- Data1_Test$Ingreso_Hogar/Data1_Test$Pers_por_Hogar
+
+
+Data1_Test <- Data1_Test %>% mutate(prob_hat7=predict(Model2.2,newdata = Data1_Test, type = "response")) 
+
+rule <- 1/2 # Bayes Rule
+Data1_Test <-  Data1_Test  %>% mutate(Pobreza_hat7=ifelse(prob_hat7>rule,1,0))
+Data1_Test$pobre <- Data1_Test$Pobreza_hat7
+Pronost_fm1  <- Data1_Test[ c("id", "pobre")]
+Tabla_Pronost_fm_1 <- "C:/Output R/Problem_Set3/Taller_3/Tabla_Pronost_fm1.csv"  
+write.csv(x = Pronost_fm1, file = Tabla_Pronost_fm_1, row.names = FALSE)
 
 
 
