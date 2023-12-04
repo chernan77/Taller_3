@@ -942,7 +942,7 @@ tabla_resumen <- bind_rows(
   tabla6 %>% mutate(Model = "Logit6"),
   tabla7 %>% mutate(Model = "Logit_EN"),
   tabla8 %>% mutate(Model = "Logit_Ridge"),
-  tabla9 %>% mutate(Model = "Logit_Lasso"),# Asumiendo que es correcto etiquetar ambas como "Logic5"
+  tabla9 %>% mutate(Model = "Logit_Lasso")
 )
 
 # Imprime la tabla resumen
