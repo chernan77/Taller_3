@@ -22,6 +22,7 @@ remotes::install_github("r-lib/remotes")
 install.packages("nnet")
 install.packages("rsample")
 
+
 library(ggplot2)
 library(openxlsx)
 library(pacman)
@@ -590,6 +591,10 @@ Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JH
                                     "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
                                     "Pago_Arriendo", "SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
 
+
+Train_Data1 <- "C:/Output R/Problem_Set3/Taller_3/Train_Data1.xlsx"  
+write.xlsx(Data1, Train_Data1)
+
 Tabla_Stat <- Data1  %>% select(Hab_por_Hogar, 
                                          Dormit_Hogar, 
                                          Pers_por_Hogar,
@@ -633,7 +638,14 @@ test_Data1 <-  test_Data1  %>% mutate(Pobreza_hat1=ifelse(prob_hat1>rule,1,0))
 Pronost_1.2  <- test_Data1[ c("id", "Pobreza_hat1")]
 
 
-  
+
+# Modelos Logit con todo el conjunto de variables y observaciones de Data1
+# Modelo Logit1 con penalización tipo Elastic Net
+#Logit_EN <- as.matrix(Data1[, c("Sexo_JHogar", "Edad_JHogar", "Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años","Total_Ocup",
+#"Cat_Ocup_JHogar", "Posc_Ocup_JHogar", "Educ_JHogar", "Educ_prom_Hijos", "Hab_por_Hogar", "Dormit_Hogar",
+# "Pago_Arriendo", "SS_Jefe", "Ingreso_Hogar")])
+
+
 ###########-------------------------------------------------------------DATA 2---------------------------------------------#######
 Data2 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Edad_prom_Hijos", "Menores_18Años", 
                                    "Linea_Indigencia", "Linea_Pobreza", "Exp_Empresa","Hrs_Ocupados","Total_Ocup", "Cat_Ocup_JHogar", 
@@ -644,6 +656,10 @@ Data2 <- Data2[complete.cases(Data2$Hrs_Ocupados), ]
 Data2 <- Data2[complete.cases(Data2$Exp_Empresa), ]
 Data2 %>%
   summarise_all(~sum(is.na(.))) %>% transpose()
+
+Train_Data2 <- "C:/Output R/Problem_Set3/Taller_3/Train_Data2.xlsx"  
+write.xlsx(Data2, Train_Data2)
+
 
 Tabla_Stat <- Data2  %>% select(Hab_por_Hogar, 
                                          Dormit_Hogar, 
@@ -704,6 +720,10 @@ Data3 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar", "Edad_J
 Data3  <- Data3[complete.cases(Data3$Educ_Conyugue), ]
 Data3  <- Data3[complete.cases(Data3$Hrs_Ocupados), ]
 Data3  <- Data3[complete.cases(Data3$Exp_Empresa), ]
+
+Train_Data3 <- "C:/Output R/Problem_Set3/Taller_3/Train_Data3.xlsx"  
+write.xlsx(Data3, Train_Data3)
+
 
 Tabla_Stat <- Data3  %>% select(Hab_por_Hogar, 
                                 Dormit_Hogar, 
@@ -798,6 +818,117 @@ tabla_resumen <- bind_rows(
 
 # Imprime la tabla resumen
 print(tabla_resumen)
+
+Data_l1 <- Data2[ c("Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
+                           "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
+                           "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
+                           "Pago_Arriendo", "SS_Jefe", "Ingreso_Perc_Hogar", "Pobreza")]
+
+# Base de datos1
+# Lista de columnas categóricas (factores) a convertir a variables dummy
+train_Datal1 <- Data_l1 %>% mutate(Sexo_JHogar = case_when(Sexo_JHogar=="Male"~ 1,
+                                                              Sexo_JHogar =="Female" ~2 ),
+                                      Pobreza = case_when(Pobreza=="si"~ 1,
+                                                          Pobreza=="no"~ 0),
+                                      SS_Jefe = case_when(SS_Jefe=="Cotiza a un Seguro"~ 1,
+                                                          SS_Jefe=="No Cotiza"~2,
+                                                          SS_Jefe=="Otro"~9),
+                                      Educ_JHogar = case_when(Educ_JHogar=="Ninguno"~1, 
+                                                              Educ_JHogar=="Preescolar"~2 ,
+                                                              Educ_JHogar=="Educación básica en el ciclo de primaria"~3 ,
+                                                              Educ_JHogar=="Educación básica en el ciclo de secundaria"~4,
+                                                              Educ_JHogar=="Educación media"~5,
+                                                              Educ_JHogar=="Superior o universitaria"~6,
+                                                              Educ_JHogar=="No sabe"~9 ),
+                                      Cat_Ocup_JHogar = case_when(Cat_Ocup_JHogar=="Obrero o empleado de empresa particular"~1,
+                                                                  Cat_Ocup_JHogar=="Obrero o empleado del gobierno"~2,
+                                                                  Cat_Ocup_JHogar=="Empleado doméstico"~3,
+                                                                  Cat_Ocup_JHogar=="Trabajador por cuenta propia"~4 ,
+                                                                  Cat_Ocup_JHogar=="Patrón o empleador"~5,
+                                                                  Cat_Ocup_JHogar=="Trabajador familiar sin remuneración"~6,
+                                                                  Cat_Ocup_JHogar=="Trabajador sin remuneración en empresas o negocios de otros hogares"~7,
+                                                                  Cat_Ocup_JHogar=="Jornalero o peón"~8,
+                                                                  Cat_Ocup_JHogar=="Otro"~9),
+                                      Posc_Ocup_JHogar = case_when(Posc_Ocup_JHogar=="Trabajando"~1 ,
+                                                                   Posc_Ocup_JHogar=="Buscando trabajo"~2 ,
+                                                                   Posc_Ocup_JHogar=="Estudiando"~3,
+                                                                   Posc_Ocup_JHogar=="Oficios del hogar"~4 ,
+                                                                   Posc_Ocup_JHogar=="Incapacitado permanente para trabajar"~5,
+                                                                   Posc_Ocup_JHogar=="Otra Actividad"~6))
+
+
+############---------------------------------Logit con Elastic Net----------------------------------######################
+
+set.seed(123)
+data_split <- initial_split(train_Datal1, prop = .7)
+train_Logit_EN <- training(data_split)
+test_Logit_EN  <- testing(data_split)
+
+y <- train_Logit_EN$Pobreza
+
+train_EN_logit <- train_Logit_EN[ c("Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
+                                    "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
+                                    "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
+                                    "Pago_Arriendo", "SS_Jefe", "Ingreso_Perc_Hogar")]
+train_matrix <- as.matrix(train_EN_logit)
+test_EN_logit <- test_Logit_EN[ c("Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
+                                    "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
+                                    "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
+                                    "Pago_Arriendo", "SS_Jefe", "Ingreso_Perc_Hogar")]
+test_matrix <- as.matrix(test_EN_logit)
+
+EN_logit <- glmnet(train_matrix, y, family = "binomial", alpha = 0.5) 
+# Seleccionar el valor óptimo de lambda
+cv_EN_logit <- cv.glmnet(train_matrix, y, family = "binomial", alpha = 0.5)
+lambda_opt_en <- cv_EN_logit$lambda.min
+lambda_opt_en
+
+
+# Ajustar el modelo Elastic Net con el valor óptimo de lambda
+M_Logit_EN <- glmnet(train_matrix, y, alpha = 0.5, family = "binomial", lambda = lambda_opt_en)
+
+###############--------Pronostico dentro de Muestra------------------------###############
+test_Logit_EN <- test_Logit_EN %>% mutate(prob_h=predict(M_Logit_EN, s = lambda_opt_en, newx = test_matrix, type = "response")) 
+test_Logit_EN$prob_h <- unlist(test_Logit_EN$prob_h)
+test_Logit_EN$prob_h <- as.numeric(test_Logit_EN$prob_h)
+
+
+############---------------------------------Logit con Ridge----------------------------------######################
+
+# Ajustar un modelo de regresión Ridge
+Ridge_logit <- glmnet(train_matrix, y, family = "binomial", alpha = 0)  # alpha = 0 para regresión Ridge
+
+# Seleccionar el valor óptimo de lambda
+cv_ridge <- cv.glmnet(train_matrix, y, family = "binomial", alpha = 0)  # alpha = 0 para regresión Ridge
+lambda_opt_rgd <- cv_ridge$lambda.min
+lambda_opt_rgd
+
+# Ajustar el modelo con el valor óptimo de lambda
+M_Logit_rgd <- glmnet(train_matrix, y, family = "binomial", alpha = 0, lambda = lambda_opt_rgd)
+test_Logit_EN <- test_Logit_EN %>% mutate(prob_h1=predict(M_Logit_rgd, s = lambda_opt_rgd, newx = test_matrix, type = "response")) 
+test_Logit_EN$prob_h1 <- unlist(test_Logit_EN$prob_h1)
+test_Logit_EN$prob_h1 <- as.numeric(test_Logit_EN$prob_h1)
+
+############---------------------------------Logit con Lasso----------------------------------######################
+
+# Ajustar un modelo Logit Lasso
+Lasso_logit <- glmnet(train_matrix, y, family = "binomial", alpha = 1)  # alpha = 0 para regresión Ridge
+
+# Seleccionar el valor óptimo de lambda
+cv_lasso <- cv.glmnet(train_matrix, y, family = "binomial", alpha = 1)  # alpha = 0 para regresión Ridge
+lambda_opt_ls <- cv_lasso$lambda.min
+lambda_opt_ls
+
+# Ajustar el modelo con el valor óptimo de lambda
+M_Logit_ls <- glmnet(train_matrix, y, family = "binomial", alpha = 1, lambda = lambda_opt_ls)
+test_Logit_EN <- test_Logit_EN %>% mutate(prob_h2=predict(M_Logit_ls, s = lambda_opt_ls, newx = test_matrix, type = "response")) 
+test_Logit_EN$prob_h2 <- unlist(test_Logit_EN$prob_h2)
+test_Logit_EN$prob_h2 <- as.numeric(test_Logit_EN$prob_h2)
+
+
+Test_Datal1 <- "C:/Output R/Problem_Set3/Taller_3/Test_Datal1.xlsx"  
+write.xlsx(test_Logit_EN, Test_Datal1)
+
 
 # Importar los datos de Test
 test_personas1 <- read.xlsx("https://github.com/chernan77/Data_3/raw/main/test_personas_1.xlsx")
@@ -1118,11 +1249,12 @@ Tabla_Stat <- Data1_Test  %>% select(Hab_por_Hogar,
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
 
 
+
 Data1_Test %>%
   summarise_all(~sum(is.na(.))) %>% transpose()
 
-#Tabla_Test_hogares <- "C:/Output R/Problem_Set3/Taller_3/tabla_Test.xlsx"  
-#write_xlsx(Data1_Test, Tabla_Test_hogares)
+Test_Data <- "C:/Output R/Problem_Set3/Taller_3/Test_Data.xlsx"  
+write.xlsx(Data1_Test, Test_Data)
 
 #Tabla_1 <- "C:/Output R/Problem_Set3/Taller_3/tabla_1.xlsx"  
 #write_xlsx(Pronost_3.1,Tabla_1)
@@ -1130,21 +1262,16 @@ Data1_Test %>%
 #write_xlsx(Pronost_3.2,Tabla_2)
 
 Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
-                           "Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar",
+                           "Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
                            "Posc_Ocup_JHogar","Educ_JHogar", "Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
                            "Pago_Arriendo", "SS_Jefe", "Ingreso_Hogar", "Ingreso_Perc_Hogar", "Pobreza")]
 
 data1 <- Data1  %>% select(Sexo_JHogar,
-                           Hab_por_Hogar, 
-                           Dormit_Hogar, 
-                           Pers_por_Hogar,
-                           Pago_Arriendo,
                            Edad_JHogar2,
                            Edad_JHogar,
                            Educ_JHogar,
-                           Total_Ocup,
-                           Menores_18Años,
-                           Educ_prom_Hijos,
+                           Exp_Empresa,
+                           Hrs_Ocupados,
                            SS_Jefe,
                            Posc_Ocup_JHogar,
                            Cat_Ocup_JHogar,
@@ -1201,6 +1328,85 @@ Tabla_Pronost_fm_1 <- "C:/Output R/Problem_Set3/Taller_3/Tabla_Pronost_fm1.csv"
 write.csv(x = Pronost_fm1, file = Tabla_Pronost_fm_1, row.names = FALSE)
 
 
+# Base de datos1
+# Lista de columnas categóricas (factores) a convertir a variables dummy
+test_Datal1 <- Data1_Test %>% mutate(Sexo_JHogar = case_when(Sexo_JHogar=="Male"~ 1,
+                                                             Sexo_JHogar =="Female" ~2 ),
+                                      SS_Jefe = case_when(SS_Jefe=="Cotiza a un Seguro"~ 1,
+                                                         SS_Jefe=="No Cotiza"~2,
+                                                         SS_Jefe=="Otro"~9),
+                                     Educ_JHogar = case_when(Educ_JHogar=="Ninguno"~1, 
+                                                             Educ_JHogar=="Preescolar"~2 ,
+                                                             Educ_JHogar=="Educación básica en el ciclo de primaria"~3 ,
+                                                             Educ_JHogar=="Educación básica en el ciclo de secundaria"~4,
+                                                             Educ_JHogar=="Educación media"~5,
+                                                             Educ_JHogar=="Superior o universitaria"~6,
+                                                             Educ_JHogar=="No sabe"~9 ),
+                                     Cat_Ocup_JHogar = case_when(Cat_Ocup_JHogar=="Obrero o empleado de empresa particular"~1,
+                                                                 Cat_Ocup_JHogar=="Obrero o empleado del gobierno"~2,
+                                                                 Cat_Ocup_JHogar=="Empleado doméstico"~3,
+                                                                 Cat_Ocup_JHogar=="Trabajador por cuenta propia"~4 ,
+                                                                 Cat_Ocup_JHogar=="Patrón o empleador"~5,
+                                                                 Cat_Ocup_JHogar=="Trabajador familiar sin remuneración"~6,
+                                                                 Cat_Ocup_JHogar=="Trabajador sin remuneración en empresas o negocios de otros hogares"~7,
+                                                                 Cat_Ocup_JHogar=="Jornalero o peón"~8,
+                                                                 Cat_Ocup_JHogar=="Otro"~9),
+                                     Posc_Ocup_JHogar = case_when(Posc_Ocup_JHogar=="Trabajando"~1 ,
+                                                                  Posc_Ocup_JHogar=="Buscando trabajo"~2 ,
+                                                                  Posc_Ocup_JHogar=="Estudiando"~3,
+                                                                  Posc_Ocup_JHogar=="Oficios del hogar"~4 ,
+                                                                  Posc_Ocup_JHogar=="Incapacitado permanente para trabajar"~5,
+                                                                  Posc_Ocup_JHogar=="Otra Actividad"~6))
 
 
+Test_Data_l1 <- test_Datal1[ c("Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
+                             "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
+                             "Posc_Ocup_JHogar","Educ_JHogar","Educ_prom_Hijos", "Hab_por_Hogar","Dormit_Hogar",
+                             "Pago_Arriendo", "SS_Jefe")]
+
+
+# Predicciones fuera de muestra y cálculo de Pobreza
+Test_Data_l1$Ingreso_Hogar <- predict(lm_model, newdata = Data1_Test)
+Test_Data_l1$Ingreso_Perc_Hogar <- Test_Data_l1$Ingreso_Hogar/Test_Data_l1$Pers_por_Hogar
+Test_Data_l1$Ingreso_Hogar <- NULL
+Datal1_Test_matrix <- as.matrix(Test_Data_l1)
+
+
+
+###############--------Pronostico fuera de Muestra Elastic Net------------------------###############
+Test_Data_l1 <- Test_Data_l1 %>% mutate(prob_h=predict(M_Logit_EN, newx = Datal1_Test_matrix, type = "response")) 
+Test_Data_l1$prob_h <- unlist(Test_Data_l1$prob_h)
+Test_Data_l1$prob_h <- as.numeric(Test_Data_l1$prob_h)
+Test_Data_l1$id <- Data1_Test$id
+rule <- 1/2 # Bayes Rule
+Test_Data_l1 <-  Test_Data_l1  %>% mutate(Pobreza_hat9=ifelse(prob_h>rule,1,0))
+Test_Data_l1$pobre <- Test_Data_l1$Pobreza_hat9
+Pronost_en_1  <- Test_Data_l1[ c("id", "pobre")]
+Pronost_en1 <- "C:/Output R/Problem_Set3/Taller_3/Pronost_en1.csv"  
+write.csv(x = Pronost_en_1, file = Pronost_en1, row.names = FALSE)
+
+###############--------Pronostico fuera de Muestra Ridge------------------------###############
+Test_Data_l1 <- Test_Data_l1 %>% mutate(prob_h1=predict(M_Logit_rgd, newx = Datal1_Test_matrix, type = "response")) 
+Test_Data_l1$prob_h1 <- unlist(Test_Data_l1$prob_h1)
+Test_Data_l1$prob_h1 <- as.numeric(Test_Data_l1$prob_h1)
+Test_Data_l1$id <- Data1_Test$id
+rule <- 1/2 # Bayes Rule
+Test_Data_l1 <-  Test_Data_l1  %>% mutate(Pobreza_h10=ifelse(prob_h1>rule,1,0))
+Test_Data_l1$pobre <- Test_Data_l1$Pobreza_h10
+Pronost_rgd_1  <- Test_Data_l1[ c("id", "pobre")]
+Pronost_rgd1 <- "C:/Output R/Problem_Set3/Taller_3/Pronost_rgd1.csv"  
+write.csv(x = Pronost_rgd_1, file = Pronost_rgd1, row.names = FALSE)
+
+
+###############--------Pronostico fuera de Muestra Lasso------------------------###############
+Test_Data_l1 <- Test_Data_l1 %>% mutate(prob_h2=predict(M_Logit_ls, newx = Datal1_Test_matrix, type = "response")) 
+Test_Data_l1$prob_h2 <- unlist(Test_Data_l1$prob_h2)
+Test_Data_l1$prob_h2 <- as.numeric(Test_Data_l1$prob_h2)
+Test_Data_l1$id <- Data1_Test$id
+rule <- 1/2 # Bayes Rule
+Test_Data_l1 <-  Test_Data_l1  %>% mutate(Pobreza_h11=ifelse(prob_h2>rule,1,0))
+Test_Data_l1$pobre <- Test_Data_l1$Pobreza_h11
+Pronost_ls_1  <- Test_Data_l1[ c("id", "pobre")]
+Pronost_ls1 <- "C:/Output R/Problem_Set3/Taller_3/Pronost_ls1.csv"  
+write.csv(x = Pronost_ls_1, file = Pronost_ls1, row.names = FALSE)
 
