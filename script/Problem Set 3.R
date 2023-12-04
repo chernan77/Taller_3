@@ -155,7 +155,6 @@ train_hogares <- train_hogares %>% rename(Linea_Pobreza=Lp)
 train_hogares <- train_hogares %>% rename(Ing_perc_ug=Ingpcug)
 
 
-
 # Analisis descriptivo 
 
 train_personas %>%
@@ -777,47 +776,6 @@ test_Data3 <- test_Data3 %>% mutate(prob_hat5=predict(Model3.2,newdata = test_Da
 test_Data3 <-  test_Data3  %>% mutate(Pobreza_hat5=ifelse(prob_hat5>rule,1,0))
 Pronost_3.2  <- test_Data3[ c("id", "Pobreza_hat5")]
 
-# Convertir en Factor los pronósticos:
-
-test_Data1 <- test_Data1 %>% 
-  mutate(Pobreza_hat=factor(Pobreza_hat,levels=c(0,1),labels=c("no","si"))) # Logic1
-test_Data1 <- test_Data1 %>% 
-  mutate(Pobreza_hat1=factor(Pobreza_hat1,levels=c(0,1),labels=c("no","si"))) # Logic2
-test_Data2 <- test_Data2 %>% 
-  mutate(Pobreza_hat2=factor(Pobreza_hat2,levels=c(0,1),labels=c("no","si"))) # Logic3
-test_Data2 <- test_Data2 %>% 
-  mutate(Pobreza_hat3=factor(Pobreza_hat3,levels=c(0,1),labels=c("no","si"))) # Logic4
-test_Data3 <- test_Data3 %>% 
-  mutate(Pobreza_hat4=factor(Pobreza_hat4,levels=c(0,1),labels=c("no","si"))) # Logic5
-test_Data3 <- test_Data3 %>% 
-  mutate(Pobreza_hat5=factor(Pobreza_hat5,levels=c(0,1),labels=c("no","si"))) # Logic5
-
-accuracy <- accuracy(test_Data1, truth = Pobreza, estimate = Pobreza_hat)
-accuracy1 <- accuracy(test_Data1, truth = Pobreza, estimate = Pobreza_hat1)
-accuracy2 <- accuracy(test_Data2, truth = Pobreza, estimate = Pobreza_hat2)
-accuracy3 <- accuracy(test_Data2, truth = Pobreza, estimate = Pobreza_hat3)
-accuracy4 <- accuracy(test_Data3, truth = Pobreza, estimate = Pobreza_hat4)
-accuracy5 <- accuracy(test_Data3, truth = Pobreza, estimate = Pobreza_hat5)
-
-# Crear una tabla tidy con las métricas
-tabla1 <- tribble( ~Metric, ~Value, "Accuracy", accuracy$.estimate)
-tabla2 <- tribble( ~Metric, ~Value, "Accuracy", accuracy1$.estimate)
-tabla3 <- tribble( ~Metric, ~Value, "Accuracy", accuracy2$.estimate)
-tabla4 <- tribble( ~Metric, ~Value, "Accuracy", accuracy3$.estimate)
-tabla5 <- tribble( ~Metric, ~Value, "Accuracy", accuracy4$.estimate)
-tabla6 <- tribble( ~Metric, ~Value, "Accuracy", accuracy5$.estimate)
- 
-tabla_resumen <- bind_rows(
-  tabla1 %>% mutate(Model = "Logic1"),
-  tabla2 %>% mutate(Model = "Logic2"),
-  tabla3 %>% mutate(Model = "Logic3"),
-  tabla4 %>% mutate(Model = "Logic4"),
-  tabla5 %>% mutate(Model = "Logic5"),
-  tabla6 %>% mutate(Model = "Logic5")  # Asumiendo que es correcto etiquetar ambas como "Logic5"
-)
-
-# Imprime la tabla resumen
-print(tabla_resumen)
 
 Data_l1 <- Data2[ c("Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
                            "Total_Ocup", "Cat_Ocup_JHogar","Exp_Empresa","Hrs_Ocupados",
@@ -891,7 +849,8 @@ M_Logit_EN <- glmnet(train_matrix, y, alpha = 0.5, family = "binomial", lambda =
 test_Logit_EN <- test_Logit_EN %>% mutate(prob_h=predict(M_Logit_EN, s = lambda_opt_en, newx = test_matrix, type = "response")) 
 test_Logit_EN$prob_h <- unlist(test_Logit_EN$prob_h)
 test_Logit_EN$prob_h <- as.numeric(test_Logit_EN$prob_h)
-
+test_Logit_EN <-  test_Logit_EN  %>% mutate(Pobreza_hat6=ifelse(prob_h>rule,1,0))
+Pronost_4.1  <- test_Logit_EN[ c("Pobreza_hat6")]
 
 ############---------------------------------Logit con Ridge----------------------------------######################
 
@@ -908,6 +867,8 @@ M_Logit_rgd <- glmnet(train_matrix, y, family = "binomial", alpha = 0, lambda = 
 test_Logit_EN <- test_Logit_EN %>% mutate(prob_h1=predict(M_Logit_rgd, s = lambda_opt_rgd, newx = test_matrix, type = "response")) 
 test_Logit_EN$prob_h1 <- unlist(test_Logit_EN$prob_h1)
 test_Logit_EN$prob_h1 <- as.numeric(test_Logit_EN$prob_h1)
+test_Logit_EN <-  test_Logit_EN  %>% mutate(Pobreza_hat7=ifelse(prob_h1>rule,1,0))
+Pronost_4.2  <- test_Logit_EN[ c("Pobreza_hat7")]
 
 ############---------------------------------Logit con Lasso----------------------------------######################
 
@@ -924,6 +885,69 @@ M_Logit_ls <- glmnet(train_matrix, y, family = "binomial", alpha = 1, lambda = l
 test_Logit_EN <- test_Logit_EN %>% mutate(prob_h2=predict(M_Logit_ls, s = lambda_opt_ls, newx = test_matrix, type = "response")) 
 test_Logit_EN$prob_h2 <- unlist(test_Logit_EN$prob_h2)
 test_Logit_EN$prob_h2 <- as.numeric(test_Logit_EN$prob_h2)
+test_Logit_EN <-  test_Logit_EN  %>% mutate(Pobreza_hat8=ifelse(prob_h2>rule,1,0))
+Pronost_4.2  <- test_Logit_EN[ c("Pobreza_hat8")]
+
+
+# Convertir en Factor los pronósticos:
+
+test_Data1 <- test_Data1 %>% 
+  mutate(Pobreza_hat=factor(Pobreza_hat,levels=c(0,1),labels=c("no","si"))) # Logic1
+test_Data1 <- test_Data1 %>% 
+  mutate(Pobreza_hat1=factor(Pobreza_hat1,levels=c(0,1),labels=c("no","si"))) # Logic2
+test_Data2 <- test_Data2 %>% 
+  mutate(Pobreza_hat2=factor(Pobreza_hat2,levels=c(0,1),labels=c("no","si"))) # Logic3
+test_Data2 <- test_Data2 %>% 
+  mutate(Pobreza_hat3=factor(Pobreza_hat3,levels=c(0,1),labels=c("no","si"))) # Logic4
+test_Data3 <- test_Data3 %>% 
+  mutate(Pobreza_hat4=factor(Pobreza_hat4,levels=c(0,1),labels=c("no","si"))) # Logic5
+test_Data3 <- test_Data3 %>% 
+  mutate(Pobreza_hat5=factor(Pobreza_hat5,levels=c(0,1),labels=c("no","si"))) # Logic6
+test_Logit_EN <- test_Logit_EN %>% 
+  mutate(Pobreza_hat6=factor(Pobreza_hat6,levels=c(0,1),labels=c("no","si"))) # Logic7
+test_Logit_EN <- test_Logit_EN %>% 
+  mutate(Pobreza=factor(Pobreza,levels=c(0,1),labels=c("no","si"))) # convertir en factor la variable pobreza
+test_Logit_EN <- test_Logit_EN %>% 
+  mutate(Pobreza_hat7=factor(Pobreza_hat7,levels=c(0,1),labels=c("no","si"))) # Logic7
+test_Logit_EN <- test_Logit_EN %>% 
+  mutate(Pobreza_hat8=factor(Pobreza_hat8,levels=c(0,1),labels=c("no","si"))) # Logic8
+
+accuracy <- accuracy(test_Data1, truth = Pobreza, estimate = Pobreza_hat)
+accuracy1 <- accuracy(test_Data1, truth = Pobreza, estimate = Pobreza_hat1)
+accuracy2 <- accuracy(test_Data2, truth = Pobreza, estimate = Pobreza_hat2)
+accuracy3 <- accuracy(test_Data2, truth = Pobreza, estimate = Pobreza_hat3)
+accuracy4 <- accuracy(test_Data3, truth = Pobreza, estimate = Pobreza_hat4)
+accuracy5 <- accuracy(test_Data3, truth = Pobreza, estimate = Pobreza_hat5)
+accuracy6 <- accuracy(test_Logit_EN, truth = Pobreza, estimate = Pobreza_hat6)
+accuracy7 <- accuracy(test_Logit_EN, truth = Pobreza, estimate = Pobreza_hat7)
+accuracy8 <- accuracy(test_Logit_EN, truth = Pobreza, estimate = Pobreza_hat8)
+
+# Crear una tabla tidy con las métricas
+tabla1 <- tribble( ~Metric, ~Value, "Accuracy", accuracy$.estimate)
+tabla2 <- tribble( ~Metric, ~Value, "Accuracy", accuracy1$.estimate)
+tabla3 <- tribble( ~Metric, ~Value, "Accuracy", accuracy2$.estimate)
+tabla4 <- tribble( ~Metric, ~Value, "Accuracy", accuracy3$.estimate)
+tabla5 <- tribble( ~Metric, ~Value, "Accuracy", accuracy4$.estimate)
+tabla6 <- tribble( ~Metric, ~Value, "Accuracy", accuracy5$.estimate)
+tabla7 <- tribble( ~Metric, ~Value, "Accuracy", accuracy6$.estimate)
+tabla8 <- tribble( ~Metric, ~Value, "Accuracy", accuracy7$.estimate)
+tabla9 <- tribble( ~Metric, ~Value, "Accuracy", accuracy8$.estimate)
+
+tabla_resumen <- bind_rows(
+  tabla1 %>% mutate(Model = "Logit1"),
+  tabla2 %>% mutate(Model = "Logict2"),
+  tabla3 %>% mutate(Model = "Logit3"),
+  tabla4 %>% mutate(Model = "Logit4"),
+  tabla5 %>% mutate(Model = "Logit5"),
+  tabla6 %>% mutate(Model = "Logit6"),
+  tabla7 %>% mutate(Model = "Logit_EN"),
+  tabla8 %>% mutate(Model = "Logit_Ridge"),
+  tabla9 %>% mutate(Model = "Logit_Lasso"),# Asumiendo que es correcto etiquetar ambas como "Logic5"
+)
+
+# Imprime la tabla resumen
+print(tabla_resumen)
+
 
 
 Test_Datal1 <- "C:/Output R/Problem_Set3/Taller_3/Test_Datal1.xlsx"  
