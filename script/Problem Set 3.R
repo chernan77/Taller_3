@@ -21,6 +21,7 @@ install.packages(c("psych", "summarytools"))
 remotes::install_github("r-lib/remotes")
 install.packages("nnet")
 install.packages("rsample")
+install.packages("openpyxl")
 
 
 library(ggplot2)
@@ -40,6 +41,7 @@ library(psych)
 library(summarytools)
 library(nnet)
 library(rsample)
+library(openpyxl)
 
 # Cargar las librerías listadas e instalarlas en caso de ser necesario
 p_load(rio, # Import data easily
@@ -373,6 +375,13 @@ train_hogares1 <- train_hogares[ c("id","Dominio","Per_por_Hogar","Per_Uni_Gasto
                                                   "htrabaocupados","niños18", "anos_educ_promedio_hijos", "edad_promediohijos", "Subsidio", 
                                                    "Subsidio_Familia","Prop_Vivienda", "SS_Jefe","htrabaocupados_prop")]
 
+tabla_sexo <- table(train_hogares1$sexojefe)
+print(tabla_sexo)
+conteo_male <- sum(train_hogares1$sexojefe == "Male")
+conteo_female <- sum(train_hogares1$sexojefe == "Female")
+
+print(paste("Male:", conteo_male))
+print(paste("Female:", conteo_female))
 
 
 train_hogares1 %>%
@@ -397,6 +406,24 @@ promedio_Ing_perc_ug <- train_hogares1 %>%
   group_by(Dominio) %>%
   summarize(media_Ing_perc_ug = mean(Ing_perc_ug, na.rm = TRUE))
 promedio_Ing_perc_ug
+promedio_Ing_perc_ug <- as.data.frame(promedio_Ing_perc_ug)
+
+library(ggplot2)
+
+library(ggplot2)
+
+# Gráfico de barras del promedio Ing_perc_ug por Departamento
+ggplot(promedio_Ing_perc_ug, aes(x = Dominio, y = media_Ing_perc_ug)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Promedio Ingreso per cápita por Departamento",
+       x = "Departamento",
+       y = "Ingreso per cápita") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  
+
+
+
 train_hogares1 <- left_join(train_hogares1, promedio_Ing_perc_ug %>% select(Dominio, media_Ing_perc_ug), by = "Dominio")
 
 train_hogares1 <- train_hogares1 %>%
@@ -530,6 +557,16 @@ train_hogares1$Prop_Vivienda <- ifelse(is.na(train_hogares1$Prop_Vivienda),
                                  "Ocupante", train_hogares1$Prop_Vivienda)
 
 
+# Imputar en el valor minimo para la relación ingreso
+promedio_niños <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(total_niños = sum(niños18, na.rm = TRUE),
+            media_prh = mean(Per_por_Hogar, na.rm = TRUE),
+            prom_niños = mean(niños18, na.rm = TRUE))
+promedio_niños
+
+
+
 # Revisión de stadística descriptivas de variables para el Modelo
 Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar, 
                                          Dormit, 
@@ -553,7 +590,9 @@ Tabla_Stat <- train_hogares1  %>% select(Habit_por_Hogar,
                                          Prop_Vivienda,
                                          Estrato1)
 
-stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+Tabla_Descript <- as.data.frame(stargazer(data.frame(Tabla_Stat), header=FALSE, type='text', title="Estadisticas Variables Seleccionadas"))
+Stat_Tabla <- "C:/Output R/Problem_Set3/Taller_3/Tabla_Stat.xlsx"
+write_xlsx(Tabla_Descript, path = Stat_Tabla)
 
 
 # Variables para las regresiones de predicción de pobreza:
@@ -584,6 +623,13 @@ train_hogares1 <- train_hogares1 %>% rename(Ingreso_Perc_Hogar=Ing_perc_ug)  #(V
 train_hogares1 <- train_hogares1 %>% rename(Pobreza=Pobre)  #(Variable 24)
 train_hogares1$Edad_JHogar2<- train_hogares1$Edad_JHogar^2
 
+
+# Imputar en el valor minimo para la relación ingreso
+promedio_Hrs_Ocupados <- train_hogares1 %>%
+  group_by(Dominio) %>%
+  summarize(media_hrs = mean(horastrabajadasjefe, na.rm = TRUE))
+promedio_Hrs_Ocupados
+
 ###########-------------------------------------------------------------DATA 1---------------------------------------------#######
 Data1 <- train_hogares1[ c("id","Dominio", "Sexo_JHogar", "Edad_JHogar","Edad_JHogar2", "Pers_por_Hogar", "Menores_18Años", 
                                     "Linea_Indigencia", "Linea_Pobreza", "Total_Ocup", "Cat_Ocup_JHogar",
@@ -609,6 +655,18 @@ Tabla_Stat <- Data1  %>% select(Hab_por_Hogar,
                                          Pobreza)
 
 stargazer(data.frame(Tabla_Stat), header=FALSE, type='text',title="Estadisticas Variables Seleccionadas")
+
+# Gráfico de barras del promedio Ing_perc_ug por Departamento
+ggplot(train_hogares1, aes(x = Dominio, y = Pobreza)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Promedio pobreza por Departamento",
+       x = "Departamento",
+       y = "Pobreza") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5)) 
+
+
 
 # Dividimos la muestra en entrenamiento y testeo
 set.seed(123)
