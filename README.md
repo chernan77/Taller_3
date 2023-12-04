@@ -1,15 +1,15 @@
-Problem Set
-En este repositorio se encuentra la solución al ejercicio presentado en el Problem Set 2 sobre la predicción de los precios de propiedades (casas y apartamentos). Este documento fue realizado por Celin Hernández y Merit Tejeda.
+# Problem Set3
+La Gran Encueasta Inregrada de Hogares de Colombia 2018, En este repositorio se encuentra la solución al ejercicio presentado en el Problem Set3 sobre la predicción de la Pobreza en Colombia 2018 usando la . Este documento fue realizado por Celin Hernández y Merit Tejeda. 
 
-Descripción de archivos
-script:
-En este sección se encuentran dos scripts, el primero incluye la importacion de la base de datos, depuración, construccion de variables y estimación de los modelos OLS, Lasso, Ridge, Elastic Net y Boosting. El script 2 con las bases ya depuradas se dividen conjuntos de datos para hacer mas pruebas y se estiman modelos de Ramdon Forest y Gradient Descent; y se realizaron mas pruebas para los modelos ols.
+## Descripción de archivos
 
-document:
-Esta carpeta contiene el documento en word y en pdf con las explicaciones y resultados de los ejercicios realizados en el código.
+### script:
+En este sección se encuentran dos scripts uno en Rstudio (Problem Set Final) y otro en Google Colab que utiliza la estructura lógica de Python. El script de Rstudio incluye la importacion de la base de datos, depuración, construccion de variables y estimación de los modelos para pobreza e ingreso. Los modelos de clasificacion incluyen regresion logista con regularizacion, modelos de clasificación. Los modelos de regresion incluyen modelos OLS,Ridge, Lasso, Arboles,  y Gradient Boosting los cuales se estiman para posteriormente predecir pobreza. El script 2 con las bases ya depuradas sirven para la estimacion de pobreza usando la metodología de redes neuronales
 
-stores:
-Esta carpeta contiene las predicciones realizadas segun las metodologias desarrolladas.
 
-views:
-Esta carpeta el gráfico o mapa incluido en el documento.
+### document:
+Esta carpeta contiene el documento en word y en pdf con las explicaciones y resultados de los ejercicios realizados en el código. 
+
+### stores: 
+Esta carpeta contiene las predicciones realizadas segun las metodologias desarrolladas, y los resultados de las predicciones de los modelos. 
+
